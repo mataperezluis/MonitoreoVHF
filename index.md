@@ -44,14 +44,14 @@ Se configuro un transistor bipolar en corte y saturación para que sirva como co
 	
  ![](/imagenes_informe/filtro_1.png)
  
- 	Fig. 5 FilterPro Desktop
+	Fig. 5 FilterPro Desktop
 	
  Al proporcionarle alguna información como tipo de filtro, frecuencias de corte, ganancia, entre otros, el software genera el circuito del filtro con valores comerciales de resistencias y capacitores, además de realizar una simulación de la respuesta en frecuencia del filtro. 
  Para la alimentación del circuito era necesario que se utilizara una sola fuente por cuestiones de espacio y economía, lo que llevo a diseñar los amplificadores operacionales para que trabajaran con alimentación  simple. Para lograr esto se realizaron algunos cambios al circuito original del filtro, sustituyendo la tierra del circuito por una tierra virtual, y aplicando un nivel DC de Vcc/2 a la señal de entrada.
  
 ![](/imagenes_informe/filtro_2.png)
   
-  	Fig.6  Reporte del filtro generado por FilterPro Desktop
+	Fig.6  Reporte del filtro generado por FilterPro Desktop
 
 ![](/imagenes_informe/filtro_4.png)
   
@@ -107,4 +107,52 @@ Para ejecutar el programa desde la terminal se debe acceder a la carpeta donde s
 La pantalla principal contiene el menú de usuario y permite ver si se encuentra realizando una grabación y también los tonos DTMF detectados. 
 
 Lo primero que se debe hacer antes de empezar a realizar grabaciones es ingresar un radio a la base de datos esto permitirá asociar las grabaciones realizadas a un radio-base, para hacerlo se va al menú Herramientas>Ingresar Radio.
+
+![](/imagenes_informe/pant_usr.png)
+ 
+	Fig.12  Ingresar Radio
+
+En Nombre se coloca un nombre que permita identificar al radio.
+
+En ubicación se selecciona la ubicación del radio geográfica del radio estas deberán ser cargadas a la base de datos manualmente por el administrador del programa.
+
+En Modelo y serial se ingresan el modelo y el número de serial del radio-base.
+
+Para comenzar a monitorear una entrada de audio, se crea una conexión nueva, en el menú Acciones>Nueva Conexión esto abrirá la pantalla propiedades que permite fijar la propiedades de la nueva conexión.
+
+![](/imagenes_informe/pant_main.png)
+ 
+	Fig.13  Pantalla Propiedades
+
+En esta pantalla se puede elegir el dispositivo por el cual se realizara la adquisición de datos, en Lista de Dispositivos aparecerá una lista con todos los dispositivos disponibles.  
+En Ruta se coloca la ruta de la carpeta del sistema donde se guardara, los archivos de audio, el botón [+] abre una ventana que permite elegir o crear una carpeta de manera grafica.
+La barra nivel de inicio indica la nivel de volumen que debe superar el audio para que se empiece a realizar una grabación 
+La barra nivel final indica el nivel mínimo de volumen  que debe tener el audio de entrada para que la grabación continúe, si el volumen baja de este punto la grabación se detendrá y se realizara el proceso de detección de tono DTMF.
+En la opción Radio se desplegara una lista con todos los radio-base disponibles, debe haber al menos un radio base cargado en la base de datos para que se realice la grabación.
+
+Para agregar usuarios a la base de datos se utiliza el menú Herramientas>Agregar Usuario esto permitirá asociar un radio y su tono DTMF a una persona. 
+
+En Código se agrega el código DTMF que identifica al radio asignado.
+En Nombre, Apellido y Cargo van los datos de la persona a la cual se le asigno el radio.
+En Modelo y serial se ingresan el modelo y el número de serial del radio.
+Modulo Monitoreo este programa permite consultar los datos guardados y reproducir el audio de las grabaciones, además permite saber las estadísticas de uso de un determinado radio-base en un periodo de tiempo.
+
+
+![](/imagenes_informe/pant_monitor.png)
+ 
+	Fig.14  Pantalla Monitoreo
+
+ En esta pantalla se visualizan todos los datos de una radio comunicación se puede consultar por Radio: Nombre del radio base a través del cual se realizo la grabación, Código el código DTMF identificador del radio, Cargo el cargo del usuario que realizo la llamada, se pude consultar por fecha o no, solo con marcar o desmarcar el botón consultar por fecha, si estos campos se dejan en blanco el programa mostrara todas las llamadas realizadas.
+
+ Al presionar el botón buscar aparecerán todas las llamadas almacenadas en la base de datos que coincidan con la búsqueda realizada, el botón reproducir abrirá un reproductor de audio que permite escuchar la grabación.
+
+![](/imagenes_informe/pant_grabador_f.png)
+ 
+ 	Fig.15  Pantalla Monitoreo Funcionando
+
+La pestaña estadísticas permite consultar las estadísticas de uso de un radio-base en un tiempo determinado, puede consultar la información por años, o meses de un año, el sistema mostrara un grafico de barras con el número de llamadas grabadas a través del radio-base determinado, el programa guardara una imagen en formato .png del grafico para que pueda ser utilizado en otras aplicaciones.
+
+el informe completo sobre éste sistema se puede descargar desde 
+
+https://drive.google.com/file/d/1d-Ca0kUcSWiV4yGMPNNpxaiM6wOeb7YQ/view?usp=sharing
 

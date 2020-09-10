@@ -1,8 +1,7 @@
-## Welcome to GitHub Pages
+## Monitoreo y Registro de una red VHF con python
 
-You can use the [editor on GitHub](https://github.com/mataperezluis/MonitoreoVHF/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
-
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+Etapa 1: Construir el sistema de acondicionamiento de la señal de audio y decodificación de tonos
+	El sistema se diseñó para un radio Motorola GM300 el cual posee un conector de 16 pines para conexión de accesorios:
 
 ### Markdown
 

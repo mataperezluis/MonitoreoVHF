@@ -1,0 +1,14 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Name=MonitorRadio
+Version=1.0
+Exec=/usr/bin/MonitoreoRadio
+Comment=Permite consultar la informacion de las radiocomunicaciones
+Icon=/usr/usr/share/MonitoreoRadio/logo2.png
+Type=Application
+Terminal=false
+StartupNotify=true
+Encoding=UTF-8
+Categories=AudioVideo;
+MimeType=application/dbp;
+Name[es_VE]=monitorradio

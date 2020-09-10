@@ -1,0 +1,1573 @@
+#!/usr/bin/env python2.6
+# -*- coding: utf-8 -*-
+import sys
+from PyQt4 import QtCore
+from PyQt4 import QtGui 
+from grabador_principal import MainWindow2
+
+def main():	
+	app = QtGui.QApplication(sys.argv)
+	app.Encoding(QtGui.QApplication.UnicodeUTF8)
+        utfcodec = QtCore.QTextCodec.codecForName("UTF-8")
+	QtCore.QTextCodec.setCodecForTr(utfcodec)
+	QtCore.QTextCodec.setCodecForCStrings(utfcodec)
+	QtCore.QTextCodec.setCodecForLocale(utfcodec)
+	mainWindow = MainWindow2()   
+	#mainWindow.setGeometry(100, 100, 200, 200)
+	mainWindow.show()	
+	sys.exit(app.exec_())
+
+if __name__ == "__main__":
+	main()
+
+***************************************************************************************************
+
+#!/usr/bin/env python2.6
+# -*- coding: utf-8 -*-
+import sys
+from PyQt4 import QtCore
+from PyQt4 import QtGui 
+from PyQt4 import uic
+
+(Ui_MainWindow, QMainWindow1) = uic.loadUiType('/usr/usr/share/GrabadorRadio/mainwindow.ui')
+#(Ui_MainWindow2, QMainWindow) = uic.loadUiType('principal.ui')
+(Ui_MainWindow3, QMainWindow3) = uic.loadUiType('/usr/usr/share/GrabadorRadio/acerca.ui')
+from mainwindow import MainWindow
+from radios import Radios
+from usuario import Usuario
+#from monitoreo import Monitor
+
+class acerca(QMainWindow3):
+
+	def __init__(self):
+		QMainWindow3.__init__(self)
+		self.ui = Ui_MainWindow3()
+		self.ui.setupUi(self) 				
+		self.centrar()
+		self.setWindowTitle("Acerca de...")
+		self.setWindowIcon(QtGui.QIcon('/usr/usr/share/GrabadorRadio/logo2.png'))
+		
+	def centrar(self):	
+		screen = QtGui.QDesktopWidget().screenGeometry()
+		size =  self.geometry()
+		self.move((screen.width()-size.width())/2, (screen.height()-size.height())/2)
+
+class propiedades(QMainWindow1):
+	def __init__(self,parent):
+		QMainWindow1.__init__(self,parent)
+		self.prueba = parent
+		#layout = QHBoxLayout()
+		#lineEdit = QLineEdit()
+		self.ui = Ui_MainWindow()
+		self.ui.setupUi(self) 
+		self.centrar()
+		#lineEdit.setText("Just to fill up the dialog")
+		#layout.addWidget(lineEdit)
+		self.widget2 = (MainWindow())
+		#self.widget.setLayout(layout)
+		self.setCentralWidget(self.widget2)
+		self.setWindowTitle("Propiedades Conexion")
+		QtCore.QObject.connect(self.widget2.ui.pushButton,QtCore.SIGNAL("clicked()"), self.salir)
+		QtCore.QObject.connect(self.widget2.ui.pushButton_4,QtCore.SIGNAL("clicked()"), self.ocultar)
+		QtCore.QObject.connect( self.widget2, QtCore.SIGNAL( "send( PyQt_PyObject)"), self.barraVol)
+		QtCore.QObject.connect( self.widget2, QtCore.SIGNAL( "send2( PyQt_PyObject)"), self.dtmf)
+	def salir(self):
+		QtCore.QObject.disconnect(self.widget2.ui.pushButton,QtCore.SIGNAL("clicked()"), self.salir)
+		QtCore.QObject.disconnect(self.widget2.ui.pushButton_4,QtCore.SIGNAL("clicked()"), self.ocultar)
+		QtCore.QObject.disconnect( self.widget2, QtCore.SIGNAL( "send( PyQt_PyObject)"), self.barraVol)
+		QtCore.QObject.disconnect( self.widget2, QtCore.SIGNAL( "send2( PyQt_PyObject)"), self.dtmf)		
+		self.widget2.ctimer.stop()
+		try:
+			conteo = self.prueba.layout.indexOf(self.boton)
+			h=0
+		except:
+			h=1
+		if h == 0 :				
+			conteo2=conteo 
+			while conteo >= (conteo2 - 3):
+				item = self.prueba.layout.takeAt(conteo)
+				conteo = conteo - 1
+				if not item:
+				   continue
+				w = item.widget()
+				if w:	
+				   w.deleteLater()
+		self.widget2.salir()
+		self.close()
+
+	def barraVol(self, message):
+		self.barra.setValue(int(message))
+
+	def dtmf(self,message):
+		self.lista.addItem(str(message))
+
+	def ocultar(self):
+		oculta,indice,texto = self.widget2.ocultar()				
+		if  oculta== 1:		
+			self.label1 = (QtGui.QLabel("Conexion " + str(texto)))		
+			self.prueba.layout.addWidget(self.label1,indice,0)
+			self.barra = (QtGui.QProgressBar())			
+			self.prueba.layout.addWidget(self.barra,indice,1)
+			self.barra.setRange(-50,0)	
+			self.barra.setValue(-50)							
+			self.barra.setFormat("%v")	
+			self.lista = QtGui.QListWidget()	
+			self.prueba.layout.addWidget(self.lista,indice,2)
+			self.boton = QtGui.QPushButton("X")
+			QtCore.QObject.connect(self.boton,QtCore.SIGNAL("clicked()"), self.salir)
+			self.prueba.layout.addWidget(self.boton,indice,3)
+			self.prueba.widget.setLayout(self.prueba.layout)
+			self.hide()	
+	def centrar(self):
+		screen = QtGui.QDesktopWidget().screenGeometry()
+		size =  self.geometry()
+		self.move((screen.width()-size.width())/2, (screen.height()-size.height())/2)
+
+class MainWindow2(QtGui.QMainWindow):
+	def __init__(self):
+		QtGui.QMainWindow.__init__(self)
+		#self.ui = Ui_MainWindow2()      	
+		self.widget = QtGui.QWidget()
+		self.setCentralWidget(self.widget)
+		#self.ui.setupUi(self)  
+		self.menuBar = QtGui.QMenuBar(self)	
+		self.setMenuBar(self.menuBar)
+		self.menu = self.menuBar.addMenu('&Acciones')
+		self.menu2 = self.menuBar.addMenu('&Herramientas')
+		self.menu3 = self.menuBar.addMenu('&Ayuda')
+		global mainWindow		
+		
+		accionNuv = self.menu.addAction('Nueva Conexion')		
+		accionSal = self.menu.addAction('Salir')				
+		accionacr=self.menu3.addAction('Acerca de...')	
+		accionUser=self.menu2.addAction('Agregar Usuario')	
+		accionRadio=self.menu2.addAction('Agregar Radio')
+		#accionMonitor=self.menu2.addAction('Monitoreo')						
+		self.layout = QtGui.QGridLayout()
+		self.widget.setLayout(self.layout)		
+		self.setGeometry(0, 0, 500, 250)
+		self.setWindowIcon(QtGui.QIcon('/usr/usr/share/GrabadorRadio/logo2.png'))
+		self.setWindowTitle("Grabador Radio")
+		self.centrar()
+		self.connect(accionNuv, QtCore.SIGNAL('triggered()'), self.newWindow)
+		self.connect(accionacr, QtCore.SIGNAL('triggered()'), self.acercade)
+		self.connect(accionSal, QtCore.SIGNAL('triggered()'), self.salir)
+		self.connect(accionUser, QtCore.SIGNAL('triggered()'), self.usuario)	
+		self.connect(accionRadio, QtCore.SIGNAL('triggered()'), self.radio)
+		#self.connect(accionMonitor, QtCore.SIGNAL('triggered()'), self.monitoreo)
+
+	def newWindow(self):	
+		self.prop=propiedades(self)
+		self.prop.show()
+	def acercade(self):		
+		self.acer = acerca()
+		self.acer.show()
+	def salir(self):
+		sys.exit(0)
+	def usuario(self):
+		self.usr = Usuario()
+		self.usr.show()
+	def radio(self):
+		self.radio = Radios()
+		self.radio.show()
+	#def monitoreo(self):
+	#	self.mon=Monitor()
+	#	self.mon.show()
+	def centrar(self):
+		screen = QtGui.QDesktopWidget().screenGeometry()
+		size =  self.geometry()
+		self.move((screen.width()-size.width())/2, (screen.height()-size.height())/2)
+
+*********************************************************************************************************
+
+#!/usr/bin/env python2.6
+# -*- coding: utf-8 -*-
+from PyQt4 import uic
+from PyQt4 import QtCore
+from PyQt4 import QtGui
+from PyQt4.QtSql import *
+import PyQt4
+import PyQt4.Qt as qt
+from optparse import OptionParser
+import os
+import dbus
+import gst
+import sys
+import time
+import datetime
+import pyaudio
+import gobject
+import wave
+import threading
+import alsaaudio, time, audioop
+from DTMFdetector import DTMFdetector
+from gnonlin import gnonlin
+import ogg.vorbis
+import math
+from kiwi.ui.dialogs import selectfolder as select_folder
+
+
+NUM_SAMPLES = 1024
+SAMPLING_RATE = 8000
+
+(Ui_MainWindow, QMainWindow) = uic.loadUiType('/usr/usr/share/GrabadorRadio/mainwindow.ui')
+
+class MainWindow (QMainWindow):
+		"""MainWindow inherits QMainWindow"""
+		def __init__ (self, parent=None):
+			global homeDir
+			QMainWindow.__init__(self, parent)
+			homeDir = os.environ['HOME'] + '/Documentos/audio/'
+			self.ui = Ui_MainWindow()
+			self.ui.setupUi(self)
+			self.centrar()
+			self.lista_dispositivos()
+			oparser = OptionParser()
+			oparser.add_option("-f", "--file", dest="path",help="save to FILE", metavar="FILE")
+			oparser.add_option("-d", "--device", dest="device",help="Use device DEVICE", metavar="DEVICE")
+			(options, args) = oparser.parse_args()
+			self.ctimer = QtCore.QTimer()
+			self.ctimer2 = QtCore.QTimer()
+			self.ui.lineEdit.setText(homeDir)
+			self.basedatos(0)
+			self.setWindowIcon(QtGui.QIcon('/usr/usr/share/GrabadorRadio/logo2.png'))
+			query = QSqlQuery(db)
+			if query.exec_("SELECT * FROM radios_nombre"):
+				while query.next():
+					self.ui.comboBox_2.addItem(query.value(1).toString())
+			db.close()
+			db.removeDatabase("rad0") 			
+			QtCore.QObject.connect(self.ui.pushButton,QtCore.SIGNAL("clicked()"), self.salir)
+			QtCore.QObject.connect(self.ui.pushButton_4,QtCore.SIGNAL("clicked()"), self.constant)
+			QtCore.QObject.connect(self.ui.pushButton_2,QtCore.SIGNAL("clicked()"), self.ruta)
+			QtCore.QObject.connect(self.ctimer, QtCore.SIGNAL("timeout()"), self.constantUpdate)
+			QtCore.QMetaObject.connectSlotsByName(self)
+
+			#self.basedatos()
+			self.player = gst.element_factory_make('playbin', 'player')
+			try:
+             # alsasink pulsesink osssink autoaudiosink
+				device = gst.parse_launch('alsasink')
+			except gobject.GError:
+				print 'Error: could not launch audio sink'
+			else:
+				self.player.set_property('audio-sink', device)
+			gobject.threads_init()
+
+		def centrar(self):
+			screen = QtGui.QDesktopWidget().screenGeometry()
+			size =  self.geometry()
+			self.move((screen.width()-size.width())/2, (screen.height()-size.height())/2)
+			
+		def lista_dispositivos(self):
+			global identifiers
+			bus = dbus.SystemBus()
+			hal_manager = bus.get_object("org.freedesktop.Hal", "/org/freedesktop/Hal/Manager")
+			hal_manager = dbus.Interface(hal_manager, "org.freedesktop.Hal.Manager")
+
+			devices = hal_manager.FindDeviceStringMatch("alsa.type", "capture")
+			devices.sort()
+			identifiers = []
+
+			for dev in devices:
+				device = bus.get_object("org.freedesktop.Hal", dev)
+
+				card = device.GetAllProperties(dbus_interface="org.freedesktop.Hal.Device")
+				if card["alsa.card"] not in identifiers:
+					self.ui.comboBox.addItem("%d. %s" % (card["alsa.card"], card["alsa.card_id"]))
+					identifiers.append(card["alsa.card"])
+			return identifiers
+			
+		def recslot(self):
+			global f,hora,fecha,base,radio
+			hora = time.strftime("%H%M%S", time.localtime())
+			fecha = time.strftime("%Y%m%d", time.localtime())
+			base = str(self.ui.lineEdit.text())
+			radio= str(self.ui.comboBox_2.currentText())
+			f = base  + fecha + '_' + hora +'.ogg'
+			indice=identifiers[self.ui.comboBox.currentIndex()]
+			self.record(indice,f)
+			
+		def record(self,device_id, capture_path):
+			
+			self.player = gst.parse_launch("""alsasrc device=hw:%d ! audioconvert ! level message=true name=recordlevel interval=10000000 ! audioconvert ! volume volume=1.6 ! vorbisenc ! oggmux ! filesink location=%s""" % (device_id, capture_path))
+			#self.ui.label_5.setText("grabando")
+			self.player.get_bus().add_signal_watch()
+			i = self.player.get_bus().connect('message', self.bus_event)
+			self.player.set_state(gst.STATE_PLAYING)
+			
+		
+		def __del__ (self):
+			self.ui = None
+			
+		def constant(self):
+			global bien
+			bien=0
+			#print str(self.ui.comboBox_2.currentIndex())
+			if os.path.exists(str(self.ui.lineEdit.text())) == True:
+				if len(str(self.ui.comboBox_2.currentText())) > 0:
+					self.abrir_inp()
+					global db
+					db = 0	
+					self.basedatos(0)
+					self.ctimer.start(0.001)
+					bien=1
+				else:
+					self.ui.label_6.setText("Debe Indicar el Nombre del Radio")
+			else:
+				self.ui.label_5.setText("Debe Indicar una Ruta Valida")
+			
+		def basedatos(self,inicio):
+			global db
+			if inicio == 0:
+				base_datos="rad" + str(identifiers[self.ui.comboBox.currentIndex()]) 			
+			else:				
+				base_datos="Db" + str(identifiers[self.ui.comboBox.currentIndex()]) 
+			db = QSqlDatabase.addDatabase("QMYSQL",base_datos);
+			if db.isOpen() == False:
+				db.setHostName("localhost")
+				db.setDatabaseName("radiomonitor")
+				db.setUserName("root")
+				db.setPassword("cadafe")
+				ok = db.open()
+				# True if connected
+				if ok:
+					print "Conecto"
+				else:
+					print "Fallo"
+		
+		def bus_event(self,bus, message):
+			peak = message.structure["peak"][0]
+			print peak
+			if peak>-51 and peak < 1:			
+				self.emit( QtCore.SIGNAL( "send( PyQt_PyObject)"), peak)
+				
+			if peak < self.ui.horizontalSlider_2.value():
+				#print peak
+				self.player.set_state(gst.STATE_NULL)
+				#self.ui.label_5.setText("Terminado")
+				#self.ui.label_5.setText("Conectado")
+				#self.ui.label_4.setText("")
+				query = QSqlQuery(db)
+				conv=gnonlin()
+				try:
+					a = ogg.vorbis.VorbisFile(f)
+					t=0
+				except:
+					t=1
+					os.remove(f)
+				
+				if t == 0:
+					a.__methods__
+					['bitrate', 'bitrate_instant', 'comment', 'info', 'pcm_seek', 'pcm_seek_page', 'pcm_tell', 'pcm_total', 'raw_seek', 'raw_tell','raw_total', 'read', 'seekable', 'serialnumber', 'streams','time_seek', 'time_seek_page', 'time_tell', 'time_total']				
+					if a.time_total(0) >= 1:				
+						conv.convertir(f,0,0)
+						if a.time_total(0) >= 2:
+							tiempo=int(math.floor(a.time_total(0))-2)
+						else:
+							tiempo=int(math.floor(a.time_total(0))-1)	
+						conv.convertir(f,tiempo,1)
+						dtmf = DTMFdetector()
+						dtmf0= dtmf.getDTMFfromWAV("salida_0.wav")
+						if len(dtmf0) == 0:
+							dtmf0= dtmf.getDTMFfromWAV("salida_1.wav")
+						if len(dtmf0) > 0:
+							pass
+						else:
+							dtmf0="Desconocido"
+						p = base + dtmf0 + '_' + fecha + '_' + hora +'.ogg'
+						os.rename(f,p)
+						query.exec_("INSERT INTO radios_grabacion (codigo, hora, fecha, audio,radio) values('%s', '%s', '%s', '%s', '%s')" % (dtmf0,hora,fecha,p,radio))
+						self.emit( QtCore.SIGNAL( "send2( PyQt_PyObject)"), dtmf0)
+							#self.ui.label_4.setText(dtmf0)
+					else:
+						os.remove(f)
+						print("Borrado" + f)
+				
+				self.abrir_inp()
+				self.ctimer.start() 
+			return True
+
+		def salir(self):
+			try:
+				inp.close()
+			except:
+				pass
+			try:
+				self.player.set_state(gst.STATE_NULL)
+			except:
+				pass
+			try:		
+				db.close
+			except:
+				pass
+			self.close()
+			QtCore.QObject.disconnect(self.ctimer, QtCore.SIGNAL("timeout()"), self.constantUpdate)
+				
+			
+		def abrir_inp(self):
+			global inp
+			inp = alsaaudio.PCM(alsaaudio.PCM_CAPTURE,alsaaudio.PCM_NONBLOCK,str(identifiers[self.ui.comboBox.currentIndex()]))
+			#print inp.cardname()
+			inp.setchannels(0)
+			inp.setrate(8000)
+			inp.setformat(alsaaudio.PCM_FORMAT_S16_LE)
+			inp.setperiodsize(160)
+		
+		def ruta(self):
+			chosen_path = select_folder('Seleccione una Ruta', folder='/start/folder/' )
+			self.ui.lineEdit.setText((chosen_path) + '/')	
+			self.ui.label_5.setText(" ")	
+		
+		def ocultar(self):
+			
+			return bien,self.ui.comboBox.currentIndex(),self.ui.comboBox.currentText()
+				
+		def constantUpdate(self):
+			try:
+				l,data = inp.read()
+			except:
+				inp.close()
+				self.abrir_inp()
+				l,data = inp.read()
+			if l:
+				try:
+					texto=audioop.max(data, 2)
+				except:
+					texto=0
+					#print "Error"
+				print texto
+				if int(texto) > (self.ui.horizontalSlider.value()*1.2):				
+					inp.close()
+					self.recslot()
+					self.ctimer.stop()
+**************************************************************************************************************************************
+
+#!/usr/bin/env python2.6
+# -*- coding: utf-8 -*-
+import sys
+from PyQt4 import QtCore
+from PyQt4 import QtGui 
+from PyQt4.QtSql import *
+from PyQt4 import uic
+
+(Ui_MainWindow, QMainWindow) = uic.loadUiType('/usr/usr/share/GrabadorRadio/ingresarRadio.ui')
+
+class Radios(QMainWindow):
+		"""MainWindow inherits QMainWindow"""
+		def __init__ (self, parent=None):
+			utfcodec = QtCore.QTextCodec.codecForName("UTF-8")
+        		QtCore.QTextCodec.setCodecForTr(utfcodec)
+        		QtCore.QTextCodec.setCodecForCStrings(utfcodec)
+        		QtCore.QTextCodec.setCodecForLocale(utfcodec)						
+			QMainWindow.__init__(self, parent)
+			self.ui = Ui_MainWindow()
+			self.ui.setupUi(self)
+			self.setWindowTitle("Agregar Radio")
+			self.setWindowIcon(QtGui.QIcon('/usr/usr/share/GrabadorRadio/logo2.png'))
+			self.centrar()
+			self.base_datos()
+			self.busca()	
+			QtCore.QObject.connect(self.ui.pushButton_2,QtCore.SIGNAL("clicked()"), self.salir)
+			QtCore.QObject.connect(self.ui.pushButton,QtCore.SIGNAL("clicked()"), self.agrega)
+			QtCore.QObject.connect(self.ui.pushButton_3,QtCore.SIGNAL("clicked()"), self.eliminar)
+			query = QSqlQuery(db)
+			if query.exec_("SELECT * FROM ubicaciones"):
+				while query.next():
+					self.ui.comboBox.addItem(str(query.value(1).toString()))
+						
+		def base_datos(self):
+			global db
+			base_datos="Db"
+			db = QSqlDatabase.addDatabase("QMYSQL",base_datos);
+			if db.isOpen() == False:
+				db.setHostName("localhost")
+				db.setDatabaseName("radiomonitor")
+				db.setUserName("root")
+				db.setPassword("cadafe")
+				ok = db.open()
+				# True if connected
+				if ok:
+					print "Conecto"
+				else:
+					print "Fallo"
+		def agrega(self):
+			if len(str(self.ui.lineEdit.text()))>0 and len(str(self.ui.comboBox.currentText()))>0 and len(str(self.ui.lineEdit_3.text()))>0 and len(str(self.ui.lineEdit_4.text()))>0:
+				query = QSqlQuery(db)			
+				nomb=str(self.ui.lineEdit.text())
+				ubic=str(self.ui.comboBox.currentText())
+				model=str(self.ui.lineEdit_3.text())
+				seri=str(self.ui.lineEdit_4.text())
+				query.exec_("INSERT INTO radios_nombre (Nombre,Ubicacion,modelo,serial) values('%s', '%s','%s','%s')" % (nomb,ubic,model,seri))
+				self.ui.listWidget.clear()
+				self.ui.lineEdit.clear()
+				#self.ui.lineEdit_2.clear()
+				self.ui.lineEdit_3.clear()
+				self.ui.lineEdit_4.clear()	
+				self.busca()
+			else:
+				self.ui.label_3.setText("No debe dejar campos vacios")
+		
+		def busca(self):
+			global nombre,ubica,modelo,serial	
+			nombre = []
+			ubica = []
+			modelo = []
+			serial = []
+			query = QSqlQuery(db)
+			if query.exec_("SELECT * FROM radios_nombre"):
+				while query.next():
+					nombre.append(str(query.value(1).toString()))
+					ubica.append(str(query.value(2).toString()))
+					modelo.append(str(query.value(3).toString()))
+					serial.append(str(query.value(4).toString()))
+					self.ui.listWidget.addItem(str(query.value(1).toString()) + " Ubicación: " + str(query.value(2).toString()))	 	
+		def eliminar(self):
+			if self.ui.listWidget.currentRow() >= 0:
+				nomb = (nombre[self.ui.listWidget.currentRow()])
+				ubic = (ubica[self.ui.listWidget.currentRow()])
+				model = (modelo[self.ui.listWidget.currentRow()])
+				seri = (serial[self.ui.listWidget.currentRow()])
+				query = QSqlQuery(db)			
+				query.exec_("DELETE FROM radios_nombre WHERE Nombre='%s' and Ubicacion='%s' and modelo='%s' and serial='%s'" % (nomb,ubic,model,seri))
+				query.exec_("ALTER TABLE radios_nombre AUTO_INCREMENT=0")
+				self.ui.listWidget.clear()
+				self.busca()
+				
+		def salir(self):
+			db.close()
+			self.close()
+
+		def centrar(self):
+			screen = QtGui.QDesktopWidget().screenGeometry()
+			size =  self.geometry()
+			self.move((screen.width()-size.width())/2, (screen.height()-size.height())/2)
+********************************************************************************************************************************************
+
+#!/usr/bin/env python2.6
+# -*- coding: utf-8 -*-
+import sys
+from PyQt4 import QtCore
+from PyQt4 import QtGui 
+from PyQt4.QtSql import *
+from PyQt4 import uic
+
+(Ui_MainWindow, QMainWindow) = uic.loadUiType('/usr/usr/share/GrabadorRadio/usuarios.ui')
+
+class Usuario(QMainWindow):
+		"""MainWindow inherits QMainWindow"""
+		def __init__ (self, parent=None):
+			utfcodec = QtCore.QTextCodec.codecForName("UTF-8")
+        		QtCore.QTextCodec.setCodecForTr(utfcodec)
+        		QtCore.QTextCodec.setCodecForCStrings(utfcodec)
+        		QtCore.QTextCodec.setCodecForLocale(utfcodec)			
+			QMainWindow.__init__(self, parent)
+			self.ui = Ui_MainWindow()
+			self.ui.setupUi(self)
+			self.setWindowTitle("Agregar Usuario")
+			self.setWindowIcon(QtGui.QIcon('/usr/usr/share/GrabadorRadio/logo2.png'))
+			self.centrar()
+			self.base_datos()
+			self.busca()	
+			QtCore.QObject.connect(self.ui.pushButton_2,QtCore.SIGNAL("clicked()"), self.salir)
+			QtCore.QObject.connect(self.ui.pushButton,QtCore.SIGNAL("clicked()"), self.agrega)
+			QtCore.QObject.connect(self.ui.pushButton_3,QtCore.SIGNAL("clicked()"), self.eliminar)	
+			query = QSqlQuery(db)			
+			if query.exec_("SELECT * FROM cargos"):
+				while query.next():
+					self.ui.comboBox.addItem(str(query.value(1).toString()))
+					
+		def base_datos(self):
+			global db
+			base_datos="Db"
+			db = QSqlDatabase.addDatabase("QMYSQL",base_datos);
+			if db.isOpen() == False:
+				db.setHostName("localhost")
+				db.setDatabaseName("radiomonitor")
+				db.setUserName("root")
+				db.setPassword("cadafe")
+				ok = db.open()
+				# True if connected
+				if ok:
+					print "Conecto"
+				else:
+					print "Fallo"
+		def agrega(self):
+			if len(str(self.ui.lineEdit.text()))>0 and len(str(self.ui.lineEdit_2.text()))>0:
+				query = QSqlQuery(db)			
+				cod=str(self.ui.lineEdit.text())
+				nomb=str(self.ui.lineEdit_2.text())
+				app=str(self.ui.lineEdit_3.text())
+				carg=str(self.ui.comboBox.currentText())
+				model=str(self.ui.lineEdit_5.text())
+				seri=str(self.ui.lineEdit_6.text())
+				query.exec_("INSERT INTO usuarios (codigo,nombre,apellido,cargo,modelo,serial) values('%s', '%s','%s','%s','%s','%s')" % (cod,nomb,app,carg,model,seri))
+				self.ui.listWidget.clear()
+				self.ui.lineEdit.clear()
+				self.ui.lineEdit_2.clear()
+				self.ui.lineEdit_3.clear()
+				#self.ui.lineEdit_4.clear()
+				self.ui.lineEdit_5.clear()
+				self.ui.lineEdit_6.clear()				
+				self.busca()
+			else:
+				self.ui.label_5.setText("No debe dejar campos vacios")
+		
+		def busca(self):
+			global codigos	
+			codigos = []
+			query = QSqlQuery(db)
+			if query.exec_("SELECT * FROM usuarios where codigo!='Desconocido'"):
+				while query.next():
+					codigos.append(str(query.value(1).toString()))
+					self.ui.listWidget.addItem(str(query.value(1).toString()) + "   " + str(query.value(2).toString()) + " " + str(query.value(4).toString()) + " " + str(query.value(3).toString()))		
+		def eliminar(self):
+			if self.ui.listWidget.currentRow() >= 0:
+				codigo = (codigos[self.ui.listWidget.currentRow()])
+				query = QSqlQuery(db)			
+				query.exec_("DELETE FROM usuarios WHERE codigo='%s'" % (codigo))
+				query.exec_("ALTER TABLE usuarios AUTO_INCREMENT=0")
+				self.ui.listWidget.clear()
+				self.busca()
+				
+		def salir(self):
+			db.close()
+			self.close()
+
+		def centrar(self):
+			screen = QtGui.QDesktopWidget().screenGeometry()
+			size =  self.geometry()
+			self.move((screen.width()-size.width())/2, (screen.height()-size.height())/2)
+********************************************************************************************************************
+
+#!/usr/bin/env python2.6
+##############################################
+## last updated: 2/2/2007
+## 
+## This is written by John Etherton - john@johnetherton.com
+## http://johnetherton.com/programming/DTMFdetect/
+##
+##
+## Please send me any questions or comments about this code.
+## I made this so I could do DTMF detection with python on a 
+## Nokia Series 60 phone. So that's all it really does. I made it as
+## as quickly as I could. This is my first attempt at making a general,
+## reusable library for PyS60.
+##
+## LICENSE STUFF:
+## This code is released to the public for any use. I wish I knew which
+## license that is but I don't know. I should probably find out.
+##
+## This is code is offered as is with out any warranty. If it breaks
+## and does something bad, don't sue me. I have tested it to the 
+## best of my ability, but I have no doubt that it has numerous
+## faults
+##
+## The Goertzel algorithm used in this script was shamelessly stolen
+## from this wikipedia entry: http://en.wikipedia.org/wiki/Goertzel_algorithm
+## All the code not given in that entry I wrote myself. 
+##
+## IMPORTANT:
+## for this to work with PyS60 1.3.17 I had to install the wave.py
+## and chunk.py files from my python 2.2 installation onto
+## the phone as libraries.
+##
+## Usage example:
+##
+## -Assume we have a single channel 16 bit, 8000hz file "audioFile.wav"
+## -that was recorded on a phone when someone pressed 8,3,3,4,5
+## CODE:
+##		from DTMFdetector import DTMFdetector
+##		dtmf = DTMFdetector() 
+##		data = dtmf.getDTMFfromWAV("audioFile.wav")
+##		print data
+## OUTPUT:
+##		"83345"
+## 
+## It's that simple
+##
+## Oh and I can't spell so please forgive all my mistakes
+##############################################
+
+import math
+import struct
+import wave
+
+
+###############################################
+## This class is used to detect DTMF tones in a WAV file
+##
+## Currently this only works with uncompressed .WAV files
+## encoded 16 bits per channel, one channel, at 8000 hertz.
+## I know if I tried I could make this so it'd work with 
+## other sampling rates and such, but this is how PyS60 records
+## audio and I've got a bunch of other things to work on right 
+## now. If you want to add this functionality please go ahead
+## and do it
+class DTMFdetector(object):
+
+
+	###########################################
+	## The constructor
+	##
+	## initializes the instance variables
+	## pre-calculates the coefficients
+	def __init__(self):
+
+		#DEFINE SOME CONSTANTS FOR THE 
+		#GOERTZEL ALGORITHM
+		self.MAX_BINS = 8
+		self.GOERTZEL_N = 92
+		self.SAMPLING_RATE = 8000
+
+		#the frequencies we're looking for
+		self.freqs = [697, 770, 852, 941, 1209, 1336, 1477, 1633]
+
+		#the coefficients
+		self.coefs = [0, 0, 0, 0, 0, 0, 0, 0]
+
+		self.reset()
+		
+		self.calc_coeffs()
+
+	
+	###########################################
+	## This will reset all the state of the detector
+	def reset(self):
+		#the index of the current sample being looked at
+		self.sample_index = 0
+		
+		#the counts of samples we've seen
+		self.sample_count = 0
+
+		#first pass
+		self.q1 = [0, 0, 0, 0, 0, 0, 0, 0]
+
+		#second pass
+		self.q2 = [0, 0, 0, 0, 0, 0, 0, 0]
+
+		#r values
+		self.r = [0, 0, 0, 0, 0, 0, 0, 0]
+		
+		#this stores the characters seen so far
+		#and the times they were seen at for
+		#post, post processing
+		self.characters = []
+		
+		#this stores the final string of characters
+		#we believe the audio contains
+		self.charStr = ""
+
+	###########################################
+	## Post testing for algorithm
+	## figures out what's a valid signal and what's not
+	def post_testing(self):
+		row = 0
+		col = 0
+		see_digit = 0
+		peak_count = 0
+		max_index = 0
+		maxval = 0.0
+		t = 0
+		i = 0
+		msg = "none"
+		
+		row_col_ascii_codes = [["1", "2", "3", "A"],["4", "5", "6", "B"],["7", "8", "9", "C"],["*", "0", "#", "D"]]
+		
+		#Find the largest in the row group.
+		for i in range(4):
+			if self.r[i] > maxval:
+				maxval = self.r[i]
+				row = i
+				
+		#Find the largest in the column group.
+		col = 4
+		maxval = 0
+		for i in range(4,8):
+			if self.r[i] > maxval:
+				maxval = self.r[i]
+				col = i
+				
+		#Check for minimum energy
+		if self.r[row] < 4.0e5:
+			msg = "energy not enough"
+		elif self.r[col] < 4.0e5:
+			msg = "energy not enough"
+		else:
+			see_digit = True
+
+			#Normal twist
+			if self.r[col] > self.r[row]:		
+				max_index = col
+				if self.r[row] < (self.r[col] * 0.398):
+					see_digit = False
+			#Reverse twist
+			else:
+				max_index = row
+				if self.r[col] < (self.r[row] * 0.158):
+					see_digit = False
+					
+			
+			#signal to noise test
+			#AT&T states that the noise must be 16dB down from the signal.
+			# Here we count the number of signals above the threshold and
+			#there ought to be only two.
+			if self.r[max_index] > 1.0e9:
+				t = self.r[max_index] * 0.158
+			else:
+				t = self.r[max_index] * 0.010
+			
+			peak_count = 0
+			
+			for i in range(8):
+				if self.r[i] > t:
+					peak_count = peak_count + 1
+			if peak_count > 2:
+				see_digit = False
+				#print "peak count is to high: ", peak_count
+			
+			if see_digit:
+				#print row_col_ascii_codes[row][col-4] #for debugging
+				#stores the character found, and the time in the file in seconds in which the file was found
+				self.characters.append( (row_col_ascii_codes[row][col-4], float(self.sample_index) / float(self.SAMPLING_RATE)) )
+				
+
+	###########################################
+	## This takes the number of characters found and such and 
+	## figures out what's a distinct key press.
+	##
+	## So say you pressed 5,3,2,1,1
+	## The algorithm sees 555553333332222221111111111111
+	## Cleaning up gives you 5,3,2,1,1
+	def clean_up_processing(self):
+		#this is nothing but a fancy state machine
+		#to get a valid key press we need 
+		MIN_CONSECUTIVE = 2
+		#characters in a row
+		#with no more than
+		MAX_GAP = 0.0400
+		#seconds between each consecutive characters
+		#otherwise we'll think they've pressed the same
+		#key twice
+		
+		self.charStr = ""
+		
+		currentCount = 0
+		lastChar = ""
+		lastTime = 0
+		charIndex = -1
+		
+		for i in self.characters:			
+			
+			charIndex+=1
+			currentChar = i[0]
+			currentTime = i[1]
+			timeDelta = currentTime - lastTime
+			
+			#print "curr char:", currentChar, "time delta:", timeDelta #for debugging
+			
+			#check if this is the same char as last time
+			if lastChar == currentChar:
+				currentCount+=1
+			else:
+				#some times it seems we'll get a stream of good input, then some erronous input
+				#will pop-up just once. So what we're gonna do is peak ahead here and see what
+				#if it goes back to the pattern we're getting and then decide if we should
+				# let it go, stop th whole thing
+				# Make sure we can look ahead
+				if len(self.characters) > (charIndex + 2):
+					if (self.characters[charIndex + 1][0] == lastChar) and (self.characters[charIndex + 2][0] == lastChar):
+						#forget this every happened
+						lastTime = currentTime
+						continue
+				
+				#check to see if we have a valid key press on our hands
+				if currentCount >= MIN_CONSECUTIVE:
+						self.charStr+=lastChar						
+						currentCount = 1
+						lastChar = currentChar
+						lastTime = currentTime
+						continue
+			
+			#check to see if we have a big enough gap to make us think we've
+			#got a new key press			
+			if timeDelta > MAX_GAP:
+				#so de we have enough counts for this to be valid?
+				if (currentCount - 1) >= MIN_CONSECUTIVE:
+						self.charStr+=lastChar
+				currentCount = 1
+						
+				
+			
+			
+			lastChar = currentChar
+			lastTime = currentTime
+	
+		#check the end of the characters		
+		if currentCount >= MIN_CONSECUTIVE:
+						self.charStr+=lastChar
+
+	###########################################
+	## the Goertzel algorithm
+	## takes in a 16 bit signed sample
+	def goertzel(self, sample):
+		q0 = 0
+		i = 0
+		
+		self.sample_count += 1
+		self.sample_index += 1
+		
+		for i in range(self.MAX_BINS):
+			q0 = self.coefs[i] * self.q1[i] - self.q2[i] + sample
+			self.q2[i] = self.q1[i]
+			self.q1[i] = q0
+			
+		if self.sample_count == self.GOERTZEL_N:
+			for i in range(self.MAX_BINS):
+				self.r[i] = (self.q1[i] * self.q1[i]) + (self.q2[i] * self.q2[i]) - (self.coefs[i] * self.q1[i] * self.q2[i])
+				self.q1[i] = 0
+				self.q2[i] = 0
+			self.post_testing()
+			self.sample_count = 0
+			
+
+
+	###########################################
+	## calculate the coefficients ahead of time
+	def calc_coeffs(self):
+		for n in range(self.MAX_BINS):
+			self.coefs[n] = 2.0 * math.cos(2.0 * math.pi * self.freqs[n] / self.SAMPLING_RATE)
+			#print "coefs", n, "=", self.coefs[n] #for debugging
+
+		
+
+
+	###########################################
+	## this will take in a file name of a WAV file and return
+	## a string that contains the characters that were detected
+	## so if youre WAV file has the DTMFs for 5,5,5,3 then the string
+	## it returns will be "5553"
+	def getDTMFfromWAV(self, filename):
+		
+		self.reset() #reset the current state of the detector
+		
+		file = wave.open(filename)
+
+		#print file.getparams()
+		totalFrames = file.getnframes()
+		count = 0
+
+
+		while totalFrames != count:	
+			raw = file.readframes(1)
+			(sample,) = struct.unpack("h", raw)
+			self.goertzel(sample)
+			count = count + 1
+		
+		file.close()
+		
+		self.clean_up_processing()
+		
+		return self.charStr
+
+
+
+********************************************************************************************************************
+
+#!/usr/bin/env python2.6
+import sys, os, random, threading
+import gst, gobject, sys, gtk
+
+
+class gnonlin(object):
+
+	def on_pad(self,gnlcomp, pad):
+	   # print "on_pad"
+	    PAD_MUTEX.acquire()
+	    convpad = adder.get_compatible_pad(pad, pad.get_caps())        
+	    pad.link(convpad)
+	    PAD_MUTEX.release()
+	  #  print "padded", convpad
+
+	def handle_message(self,bus, message):
+	    if message.type == gst.MESSAGE_EOS:
+	       	# print "trying to quit"
+		pipeline.set_state(gst.STATE_PLAYING)
+		#print "final"		
+		gtk.main_quit()	
+				
+
+	def get_comp(self,path, start):
+	    """returns a gnlcomposition with the file at some position in a sparse timeline"""
+
+	    comp = gst.element_factory_make("gnlcomposition")
+
+	    # setup silent backing track as default
+	    silence = gst.element_factory_make("audiotestsrc")
+	    silence.set_property("volume", 0.0)
+	    silencesrc = gst.element_factory_make("gnlsource")
+	    silencesrc.set_property("priority", 2**32-1) # -1 is not of type guint!
+	    silencesrc.add(silence)
+	    comp.add(silencesrc)
+
+	    #add file
+	    filesrc = gst.element_factory_make("gnlfilesource")
+	    filesrc.set_property("location", "file://%s" % (path))
+	    filesrc.set_property("start", 0)
+	    filesrc.set_property("duration", 2*gst.SECOND)
+	    # strange errors without media-start & duration
+	    filesrc.set_property("media-start", int(start*gst.SECOND))
+	    filesrc.set_property("media-duration", 2*gst.SECOND)
+
+	    comp.add(filesrc)
+
+	    #set on-pad behavior
+	    comp.connect("pad-added", self.on_pad)
+
+	    return comp
+
+	def convertir(self,ruta,comienzo,pos):
+		gobject.threads_init()
+		global pipeline,adder,PAD_MUTEX,bus
+		pipeline = gst.Pipeline("mypipeline")
+		adder = gst.element_factory_make("adder")
+
+		PAD_MUTEX = threading.Lock()
+
+		bus = pipeline.get_bus()
+		bus.enable_sync_message_emission()
+		bus.connect("sync-message", self.handle_message)
+
+		many = []
+		comp = self.get_comp(ruta, comienzo)
+		many.append(comp)
+
+		convert = gst.element_factory_make("audioconvert")
+		resample = gst.element_factory_make("audioresample")
+
+		caps = gst.Caps("audio/x-raw-int, channels=1, width=16, rate=8000")
+		filt = gst.element_factory_make("capsfilter")
+		filt.set_property("caps", caps)
+
+		enc = gst.element_factory_make("wavenc")
+
+		#sink = gst.element_factory_make("alsasink")
+
+		sink = gst.element_factory_make("filesink")
+		outloc = "salida_" + str(pos) + ".wav" #os.path.join(bundle.dir, "punch.wav")
+		#print pos
+		sink.set_property("location", outloc)
+
+		pipeline.add(*many)
+		pipeline.add(adder, resample, convert, filt, enc, sink)
+		gst.element_link_many(adder, resample, convert, filt, enc, sink)
+
+		pipeline.set_state(gst.STATE_PLAYING)
+		gtk.main()	
+					
+			
+__________________________________________________________________________________________________
+#!/usr/bin/env python2.6
+# -*- coding: utf-8 -*-
+from monitoreo import Monitor 
+from PyQt4 import QtGui 
+from PyQt4 import QtCore
+import sys
+
+def main():
+	app = QtGui.QApplication(sys.argv)
+	app.Encoding(QtGui.QApplication.UnicodeUTF8)
+	utfcodec = QtCore.QTextCodec.codecForName("UTF-8")
+	QtCore.QTextCodec.setCodecForTr(utfcodec)
+	QtCore.QTextCodec.setCodecForCStrings(utfcodec)
+	QtCore.QTextCodec.setCodecForLocale(utfcodec)
+	mainWindow = Monitor()   
+	#mainWindow.setGeometry(100, 100, 200, 200)
+	mainWindow.show()	
+	sys.exit(app.exec_())
+
+if __name__ == "__main__":	
+	main()
+
+#!/usr/bin/env python2.6
+# -*- coding: utf-8 -*-
+import sys
+from PyQt4 import QtCore
+from PyQt4 import QtGui 
+from PyQt4.QtSql import *
+from PyQt4 import uic
+import time
+import datetime
+import calendar
+from Reproductor import Reproduce
+import matplotlib
+matplotlib.use('QT4Agg')
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+from pylab import *
+(Ui_MainWindow, QMainWindow) = uic.loadUiType('/usr/usr/share/MonitoreoRadio/monitoreo.ui')
+
+class Monitor(QMainWindow):
+		"""MainWindow inherits QMainWindow"""
+		def __init__ (self, parent=None):
+			global mainWindow
+			utfcodec = QtCore.QTextCodec.codecForName("UTF-8")
+			QtCore.QTextCodec.setCodecForTr(utfcodec)
+			QtCore.QTextCodec.setCodecForCStrings(utfcodec)
+			QtCore.QTextCodec.setCodecForLocale(utfcodec)
+			QMainWindow.__init__(self, parent)
+			self.ui = Ui_MainWindow()
+			self.ui.setupUi(self)
+			self.setWindowTitle("Monitoreo")
+			self.centrar()
+			self.base_datos()
+			self.busca()
+			self.setWindowIcon(QtGui.QIcon('/usr/usr/share/MonitoreoRadio/logo2.png'))
+			global fecha		
+			fecha=QtCore.QDate()
+			self.ui.dateEdit.setDate(fecha.currentDate())
+			self.ui.dateEdit_2.setDate(fecha.currentDate())
+			QtCore.QObject.connect(self.ui.pushButton,QtCore.SIGNAL("clicked()"), self.buscador)
+			QtCore.QObject.connect(self.ui.radioButton,QtCore.SIGNAL("clicked()"), self.radioA)
+			QtCore.QObject.connect(self.ui.radioButton_2,QtCore.SIGNAL("clicked()"), self.radioB)
+			QtCore.QObject.connect(self.ui.pushButton_2,QtCore.SIGNAL("clicked()"), self.consulta)
+			QtCore.QObject.connect(self.ui.radioButton_3,QtCore.SIGNAL("clicked()"), self.radioC)
+			QtCore.QObject.connect(self.ui.dateEdit,QtCore.SIGNAL("dateChanged(QDate)"), self.cambioFecha)
+			QtCore.QObject.connect(self.ui.dateEdit_2,QtCore.SIGNAL("dateChanged(QDate)"), self.cambioFecha2)
+			self.ui.label_10.setVisible(False)
+			self.ui.lineEdit.setVisible(False)
+			self.radioA()
+			global queryFecha
+			queryFecha = "and fecha >= '" + self.ui.dateEdit.date().toString("yyyy-MM-dd") + "' and fecha <= '" + self.ui.dateEdit_2.date().toString("yyyy-MM-dd") + "'"
+			self.ui.label_11.setText(queryFecha)
+			self.ui.label_11.setVisible(False)
+		def base_datos(self):
+			global db
+			base_datos="Db"
+			db = QSqlDatabase.addDatabase("QMYSQL",base_datos);
+			if db.isOpen() == False:
+				db.setHostName("localhost")
+				db.setDatabaseName("radiomonitor")
+				db.setUserName("root")
+				db.setPassword("cadafe")
+				ok = db.open()
+				# True if connected
+				if ok:
+					print "Conecto"
+				else:
+					print "Fallo"
+		def buscador(self):
+			global botones
+			botones = []
+			queryFecha=self.ui.label_11.text()
+			while self.ui.tableWidget.rowCount() > 0 :			
+				self.ui.tableWidget.removeRow(self.ui.tableWidget.rowCount()-1)
+			if len(str(self.ui.comboBox_2.currentText())) > 0 and len(str(self.ui.comboBox.currentText())) > 0 and len( str(self.ui.comboBox_3.currentText())) > 0:
+				query = QSqlQuery(db)	
+				if query.exec_("SELECT g.fecha,g.hora,g.codigo,u.nombre,u.apellido,u.cargo,j.Nombre,g.audio FROM radios_nombre j, radios_grabacion g LEFT OUTER JOIN usuarios u ON g.codigo=u.codigo where j.Nombre='%s' and g.codigo='%s' and j.Nombre=g.radio %s" % (str(self.ui.comboBox.currentText()),str(self.ui.comboBox_2.currentText()),queryFecha)):
+					while query.next():
+						self.ui.tableWidget.insertRow(self.ui.tableWidget.rowCount())
+						valor=self.ui.tableWidget.rowCount()-1
+						for ind in range(0,9):		
+							item=QtGui.QTableWidgetItem()
+							if ind <> 8:
+								item.setText(query.value(ind).toString())
+								self.ui.tableWidget.setItem(valor,ind,item)
+							else:
+								botones.append(QtGui.QPushButton(""))
+								icon = QtGui.QIcon("/usr/usr/share/MonitoreoRadio/Play-Normal-icon.png")
+								botones[valor].setIcon(icon)
+								self.ui.tableWidget.setCellWidget(valor,ind,botones[valor])
+								QtCore.QObject.connect(botones[valor],QtCore.SIGNAL("clicked()"), self.pulsa)
+							self.ui.tableWidget.resizeColumnsToContents()
+
+			elif len(str(self.ui.comboBox_2.currentText())) == 0 and len(str(self.ui.comboBox.currentText())) == 0 and len( str(self.ui.comboBox_3.currentText())) == 0:
+				query = QSqlQuery(db)	
+				if query.exec_("SELECT g.fecha,g.hora,g.codigo,u.nombre,u.apellido,u.cargo,j.Nombre,g.audio FROM radios_nombre j, radios_grabacion g LEFT OUTER JOIN usuarios u ON g.codigo=u.codigo where j.Nombre=g.radio %s" % queryFecha):
+
+					while query.next():
+						#print "Bien"
+						self.ui.tableWidget.insertRow(self.ui.tableWidget.rowCount())
+						valor=self.ui.tableWidget.rowCount()-1
+						for ind in range(0,9):		
+							item=QtGui.QTableWidgetItem()
+							if ind <> 8:
+								item.setText(query.value(ind).toString())
+								self.ui.tableWidget.setItem(valor,ind,item)
+							else:
+								botones.append(QtGui.QPushButton(""))
+								icon = QtGui.QIcon("/usr/usr/share/MonitoreoRadio/Play-Normal-icon.png")
+								botones[valor].setIcon(icon)
+								self.ui.tableWidget.setCellWidget(valor,ind,botones[valor])
+								QtCore.QObject.connect(botones[valor],QtCore.SIGNAL("clicked()"), self.pulsa)
+							self.ui.tableWidget.resizeColumnsToContents()
+
+			else:
+				query = QSqlQuery(db)
+				if len(str(self.ui.comboBox_2.currentText())) > 0 or len(str(self.ui.comboBox.currentText())) > 0 or len( str(self.ui.comboBox_3.currentText())) > 0:
+					if  len(str(self.ui.comboBox.currentText())) == 0 and len(str(self.ui.comboBox_2.currentText())) > 0 and len(str(self.ui.comboBox_3.currentText())) == 0:
+						query.exec_("SELECT g.fecha,g.hora,g.codigo,u.nombre,u.apellido,u.cargo,j.Nombre,g.audio FROM radios_nombre j, radios_grabacion g LEFT OUTER JOIN usuarios u ON g.codigo=u.codigo where j.Nombre=g.radio and g.codigo='%s' %s" % (str(self.ui.comboBox_2.currentText()),queryFecha))
+					elif len(str(self.ui.comboBox.currentText())) > 0 and len(str(self.ui.comboBox_2.currentText())) == 0 and len(str(self.ui.comboBox_3.currentText())) == 0:
+						query.exec_("SELECT g.fecha,g.hora,g.codigo,u.nombre,u.apellido,u.cargo,j.Nombre,g.audio FROM radios_nombre j, radios_grabacion g LEFT OUTER JOIN usuarios u ON g.codigo=u.codigo where j.Nombre='%s' and j.Nombre=g.radio %s" % (str(self.ui.comboBox.currentText()),queryFecha))
+					else:
+						if len(str(self.ui.comboBox.currentText())) == 0 and len(str(self.ui.comboBox_2.currentText())) == 0 and len(str(self.ui.comboBox_3.currentText())) > 0:					
+							 
+							query.exec_("SELECT g.fecha,g.hora,g.codigo,u.nombre,u.apellido,u.cargo,j.Nombre,g.audio FROM radios_nombre j, radios_grabacion g LEFT OUTER JOIN usuarios u ON g.codigo=u.codigo where u.cargo='%s' and j.Nombre=g.radio %s" % (str(self.ui.comboBox_3.currentText()),queryFecha))
+
+#---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+					if  len(str(self.ui.comboBox.currentText())) > 0 and len(str(self.ui.comboBox_2.currentText())) > 0 and len(str(self.ui.comboBox_3.currentText())) == 0:
+						query.exec_("SELECT g.fecha,g.hora,g.codigo,u.nombre,u.apellido,u.cargo,j.Nombre,g.audio FROM radios_nombre j, radios_grabacion g LEFT OUTER JOIN usuarios u ON g.codigo=u.codigo where j.Nombre='%s' and g.codigo='%s' and j.Nombre=g.radio %s" % (str(self.ui.comboBox.currentText()),str(self.ui.comboBox_2.currentText()),queryFecha))
+					elif len(str(self.ui.comboBox.currentText())) > 0 and len(str(self.ui.comboBox_2.currentText())) == 0 and len(str(self.ui.comboBox_3.currentText())) > 0:
+						query.exec_("SELECT g.fecha,g.hora,g.codigo,u.nombre,u.apellido,u.cargo,j.Nombre,g.audio FROM radios_nombre j, radios_grabacion g LEFT OUTER JOIN usuarios u ON g.codigo=u.codigo where j.Nombre='%s' and j.Nombre=g.radio and u.cargo='%s' %s" % (str(self.ui.comboBox.currentText()),str(self.ui.comboBox_3.currentText()),queryFecha))
+					else:
+						if len(str(self.ui.comboBox.currentText())) == 0 and len(str(self.ui.comboBox_2.currentText())) > 0 and len(str(self.ui.comboBox_3.currentText())) > 0:					
+							query.exec_("SELECT g.fecha,g.hora,g.codigo,u.nombre,u.apellido,u.cargo,j.Nombre,g.audio FROM radios_nombre j, radios_grabacion g LEFT OUTER JOIN usuarios u ON g.codigo=u.codigo where u.cargo='%s' and j.Nombre=g.radio and g.codigo='%s' %s" % (str(self.ui.comboBox_3.currentText()),str(self.ui.comboBox_2.currentText()),queryFecha))
+					while query.next():
+						#print "Entra"
+						self.ui.tableWidget.insertRow(self.ui.tableWidget.rowCount())
+						valor=self.ui.tableWidget.rowCount()-1
+						for ind in range(0,9):		
+							item=QtGui.QTableWidgetItem()
+							if ind <> 8:
+								item.setText(query.value(ind).toString())
+								self.ui.tableWidget.setItem(valor,ind,item)
+							else:
+								botones.append(QtGui.QPushButton(""))
+								icon = QtGui.QIcon("//usr/usr/share/MonitoreoRadio/Play-Normal-icon.png")
+								botones[valor].setIcon(icon)
+								self.ui.tableWidget.setCellWidget(valor,ind,botones[valor])
+								QtCore.QObject.connect(botones[valor],QtCore.SIGNAL("clicked()"), self.pulsa)
+							self.ui.tableWidget.resizeColumnsToContents()
+																
+		
+		def busca(self):
+			global nombre,codigo,cargo	
+			nombre = []
+			codigo = []
+			cargo = []
+			query = QSqlQuery(db)
+			if query.exec_("SELECT Nombre FROM radios_nombre"):
+				nombre.append("")
+				self.ui.comboBox.addItem("")
+							
+				while query.next():
+					nombre.append(str(query.value(0).toString()))
+					self.ui.comboBox.addItem(str(query.value(0).toString()))
+					self.ui.comboBox_4.addItem(str(query.value(0).toString()))
+			if query.exec_("SELECT distinct codigo FROM usuarios"):
+				codigo.append("")
+				self.ui.comboBox_2.addItem("")
+				#codigo.append("Desconocido")
+				#self.ui.comboBox_2.addItem("Desconocido")
+				while query.next():
+					codigo.append(str(query.value(0).toString()))
+					self.ui.comboBox_2.addItem(str(query.value(0).toString()))
+			if query.exec_("SELECT distinct cargo FROM usuarios"):
+				cargo.append("")
+				self.ui.comboBox_3.addItem("")
+				while query.next():
+					if len(str(query.value(0).toString())) > 0:
+						cargo.append(str(query.value(0).toString()))
+						self.ui.comboBox_3.addItem(str(query.value(0).toString()))				
+		def salir(self):
+			db.close()
+			self.close()
+		def pulsa(self):
+			try:
+				i = botones.index(self.sender())
+    			except ValueError:
+				i = -1
+			itemEnv=self.ui.tableWidget.item(i,7)					
+			Ventana = Reproduce(itemEnv.text())
+		def radioA(self):
+			self.ui.comboBox_5.clear()
+			self.ui.comboBox_6.clear()
+			self.ui.comboBox_5.addItem(time.strftime("%Y", time.localtime()))
+			self.ui.comboBox_6.addItem(time.strftime("%Y", time.localtime()))
+			self.ui.label_10.setVisible(False)
+			self.ui.lineEdit.setVisible(False)
+		def radioB(self):
+			self.ui.comboBox_5.clear()
+			self.ui.comboBox_6.clear()
+			self.ui.label_10.setVisible(True)
+			self.ui.lineEdit.setVisible(True)
+			self.ui.lineEdit.setText(time.strftime("%Y", time.localtime()))
+			for mes in range(1,13):
+				self.ui.comboBox_5.addItem(calendar.month_name[mes].upper())
+				self.ui.comboBox_6.addItem(calendar.month_name[mes].upper())
+    
+
+		def bar_graph(self,name_value_dict,meses2, graph_title='', output_name='grafica.png'):
+			figure(figsize=(10, 5)) # image dimensions  
+			title(graph_title, size='x-small')
+			#print name_value_dict.keys()
+			# add bars
+			valores = []
+			for i, key in enumerate(meses2):
+				bar(i + 0.15 , name_value_dict[key], color='red')
+				valores.append(name_value_dict[key])	
+			valores2 = []			
+			for i in range(0,len(valores)):
+				valores2.append(meses2[i] + ":" + str(valores[i]))	 
+			#print valores2
+			# axis setup
+			xticks(arange(0.55, len(name_value_dict)),
+			['%s' % (kv) for kv in valores2],
+			size='xx-small')
+			max_value = max(name_value_dict.values()) + 7
+			tick_range = arange(0, max_value, (max_value / 7))
+			yticks(tick_range, size='xx-small')
+			formatter = FixedFormatter([str(x) for x in tick_range])
+			gca().yaxis.set_major_formatter(formatter)
+			gca().yaxis.grid(which='major')
+			savefig(output_name)
+			img=QtGui.QPixmap('grafica.png')
+			self.ui.label_7.setPixmap(img)
+
+		def consulta(self):
+			if self.ui.radioButton.isChecked()==False:
+				my_dict = {'Enero': 0}
+				meses2 = []
+				inicio = self.ui.comboBox_5.currentIndex() + 1
+				final = self.ui.comboBox_6.currentIndex() + 1
+				if final >= inicio:
+					query = QSqlQuery(db)
+					del my_dict['Enero']
+					for meses in range(inicio,final+1):
+						print meses
+						quer="SELECT count(fecha) FROM radios_grabacion where radio='" + str(self.ui.comboBox_4.currentText()) +  "' and month(fecha)=" + str(meses ) + " and year(fecha)=" + self.ui.lineEdit.text()	
+						#print quer
+						if query.exec_(quer):				
+							while query.next():
+								mesNomb=calendar.month_name[meses].upper()
+								#print mesNomb
+								if mesNomb <> '':
+									meses2.append(mesNomb)
+									llamada=int(query.value(0).toString())
+									#print llamada	
+									my_dict[mesNomb] = llamada
+						 			
+					if '' in my_dict:					
+						del my_dict['']
+					#print my_dict			
+					self.bar_graph(my_dict,meses2, graph_title='Numero de LLamadas') 
+			else:
+				self.consulta2()
+	
+		def consulta2(self):
+			my_dict = {'Enero': 0}
+			a_nos2 = []
+			inicio = int(self.ui.comboBox_5.currentText())
+			final  = int(self.ui.comboBox_6.currentText())
+			if final >= inicio:
+				query = QSqlQuery(db)
+				del my_dict['Enero']
+				for meses in range(inicio,final+1):
+					quer="SELECT count(fecha) FROM radios_grabacion where radio='" + str(self.ui.comboBox_4.currentText()) +  "' and year(fecha)=" + str(meses)
+					if query.exec_(quer):				
+						while query.next():
+							mesNomb=str(meses)
+							llamada=int(query.value(0).toString())	
+							my_dict[mesNomb] = llamada
+							if mesNomb <> '':
+								a_nos2.append(str(mesNomb)) 
+					 			
+				if '' in my_dict:					
+					del my_dict['']
+				#print my_dict			
+				self.bar_graph(my_dict,a_nos2, graph_title='Numero de LLamadas') 	
+		def radioC(self):
+			if self.ui.radioButton_3.isChecked() == True:
+				self.ui.dateEdit.setVisible(True)
+				self.ui.dateEdit_2.setVisible(True)
+				self.ui.label_3.setVisible(True)
+				self.ui.label_5.setVisible(True)
+				queryFecha = " and fecha >= '" + self.ui.dateEdit.date().toString("yyyy-MM-dd") + "' and fecha <= '" + self.ui.dateEdit_2.date().toString("yyyy-MM-dd") + "'"
+				self.ui.label_11.setText(queryFecha)
+			else:
+				self.ui.dateEdit.setVisible(False)
+				self.ui.dateEdit_2.setVisible(False)
+				self.ui.label_3.setVisible(False)
+				self.ui.label_5.setVisible(False)
+				queryFecha = ""
+				self.ui.label_11.setText(queryFecha)
+		
+		def cambioFecha(self, fecha):
+			queryFecha = " and fecha >= '" + self.ui.dateEdit.date().toString("yyyy-MM-dd") + "' and fecha <= '" + self.ui.dateEdit_2.date().toString("yyyy-MM-dd") + "'"
+			self.ui.label_11.setText(queryFecha)
+			
+		def cambioFecha2(self, fecha2):
+			queryFecha = " and fecha >= '" + self.ui.dateEdit.date().toString("yyyy-MM-dd") + "' and fecha <= '" + self.ui.dateEdit_2.date().toString("yyyy-MM-dd") + "'"
+			self.ui.label_11.setText(queryFecha)			
+
+		def centrar(self):
+			screen = QtGui.QDesktopWidget().screenGeometry()
+			size =  self.geometry()
+			self.move((screen.width()-size.width())/2, (screen.height()-size.height())/2)
+
+#!/usr/bin/env python2.6
+# -*- coding: utf-8 -*-
+import sys, os, thread, time
+import pygtk, gtk, gobject
+import pygst
+import gst
+
+class Reproduce(gtk.Window):
+
+	def __init__(self,archivo):
+		self.PLAY_IMAGE = gtk.image_new_from_stock(gtk.STOCK_MEDIA_PLAY, gtk.ICON_SIZE_BUTTON)
+    		self.PAUSE_IMAGE = gtk.image_new_from_stock(gtk.STOCK_MEDIA_PAUSE, gtk.ICON_SIZE_BUTTON)	
+		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		window.set_title("Reproductor")
+		window.set_position(gtk.WIN_POS_CENTER)
+		window.set_default_size(500, -1)
+		#window.connect("destroy", self.on_destroy,"WM destroy")
+		window.set_icon_from_file("/usr/usr/share/MonitoreoRadio/logo2.png")
+		vbox = gtk.VBox()
+		window.add(vbox)
+		self.entry = gtk.Entry()
+		self.entry.set_text(str(archivo))
+		vbox.pack_start(self.entry, False)
+
+		adj1 = gtk.Adjustment(0.0, 0.0, 101.0, 0.1, 1.0, 1.0)		
+		self.scale=gtk.HScale(adj1)
+		vbox.pack_start(self.scale, True, True, 0)
+		self.scale.set_draw_value(False)
+		self.scale.connect('value-changed', self.on_scale_change)
+		window.connect('destroy', self.on_destroy)
+		hbox = gtk.HBox()
+		vbox.add(hbox)
+		buttonbox = gtk.HButtonBox()
+		hbox.pack_start(buttonbox, False)
+		self.play_button = gtk.Button()
+		self.play_button.set_image(self.PLAY_IMAGE)
+		self.play_button.connect('clicked', self.on_play)
+		buttonbox.add(self.play_button)
+		self.time_label = gtk.Label()
+		self.time_label.set_text("00:00 / 00:00")
+		hbox.add(self.time_label)
+		window.show_all()
+		self.playbin = gst.element_factory_make('playbin2')
+        	self.playbin.set_property('uri', 'file:' + str(archivo))
+        	self.bus = self.playbin.get_bus()
+        	self.bus.add_signal_watch()
+        	self.bus.connect("message::eos", self.on_finish)
+        	self.is_playing = False
+		gobject.threads_init()		
+
+    	def on_finish(self, bus, message):
+
+		t = message.type
+		if t == gst.MESSAGE_EOS:
+			self.play_thread_id = None
+			self.playbin.set_state(gst.STATE_NULL)
+			self.play_button.set_image(self.PLAY_IMAGE)
+			self.time_label.set_text("00:00 / 00:00")
+        		self.is_playing = False
+        		self.playbin.seek_simple(gst.FORMAT_TIME, gst.SEEK_FLAG_FLUSH, 0)
+        		self.scale.set_value(0)
+		elif t == gst.MESSAGE_ERROR:
+			err, debug = message.parse_error()
+			print "Error: %s" % err, debug
+			self.play_thread_id = None
+			self.playbin.set_state(gst.STATE_NULL)
+			self.play_button.set_image(self.PLAY_IMAGE)
+			self.time_label.set_text("00:00 / 00:00")
+
+    	def on_destroy(self, window):
+        	# NULL state allows the pipeline to release resources
+		self.play_button.set_image(self.PLAY_IMAGE)
+        	self.playbin.set_state(gst.STATE_NULL)
+        	self.is_playing = False
+        	#gtk.main_quit()
+
+    	def on_play(self, button):
+        	if not self.is_playing:
+            		self.play_button.set_image(self.PAUSE_IMAGE)
+            		self.is_playing = True
+            		self.playbin.set_state(gst.STATE_PLAYING)
+            		gobject.timeout_add(100, self.update_scale)
+			self.play_thread_id = thread.start_new_thread(self.play_thread, ())
+
+        	else:
+			self.play_thread_id = None            		
+			self.play_button.set_image(self.PLAY_IMAGE)
+            		self.is_playing = False
+            		self.playbin.set_state(gst.STATE_PAUSED)
+
+    	def on_scale_change(self, scale):
+        	seek_time_secs = scale.get_value()
+        	self.playbin.seek_simple(gst.FORMAT_TIME, gst.SEEK_FLAG_FLUSH | gst.SEEK_FLAG_KEY_UNIT, seek_time_secs * gst.SECOND)
+
+    	def update_scale(self):
+        	if not self.is_playing:
+            		return False # cancel timeout
+
+        	try:
+            		nanosecs, format = self.playbin.query_position(gst.FORMAT_TIME)
+            		duration_nanosecs, format = self.playbin.query_duration(gst.FORMAT_TIME)
+
+            		# block seek handler so we don't seek when we set_value()
+            		self.scale.handler_block_by_func(self.on_scale_change)
+
+            		self.scale.set_range(0, float(duration_nanosecs) / gst.SECOND)
+            		self.scale.set_value(float(nanosecs) / gst.SECOND)
+
+            		self.scale.handler_unblock_by_func(self.on_scale_change)
+
+        	except gst.QueryError:
+            	# pipeline must not be ready and does not know position
+         		pass
+
+        	return True # continue calling every 30 milliseconds
+
+	def play_thread(self):
+		play_thread_id = self.play_thread_id
+		gtk.gdk.threads_enter()
+		#self.time_label.set_text("00:00 / 00:00")
+		gtk.gdk.threads_leave()
+		while play_thread_id == self.play_thread_id:
+			try:				
+				time.sleep(0.2)
+				dur_int = self.playbin.query_duration(gst.FORMAT_TIME, None)[0]
+				try:
+					pos_int = self.playbin.query_position(gst.FORMAT_TIME, None)[0]
+					pos_str = self.convert_ns(pos_int)
+
+				except:
+					pass
+				if dur_int == -1:
+					continue
+				dur_str = self.convert_ns(dur_int)
+				gtk.gdk.threads_enter()
+				self.time_label.set_text(pos_str + " / " + dur_str)
+				gtk.gdk.threads_leave()
+				break
+			except:
+				pass
+				
+		time.sleep(0.2)
+		while play_thread_id == self.play_thread_id:
+			try:
+				pos_int = self.playbin.query_position(gst.FORMAT_TIME, None)[0]
+				pos_str = self.convert_ns(pos_int)
+			except:
+				pass
+			if play_thread_id == self.play_thread_id:
+				gtk.gdk.threads_enter()
+				self.time_label.set_text(pos_str + " / " + dur_str)
+				gtk.gdk.threads_leave()
+			time.sleep(1)
+		
+	def convert_ns(self, t):
+		# This method was submitted by Sam Mason.
+		# It's much shorter than the original one.
+		s,ns = divmod(t, 1000000000)
+		m,s = divmod(s, 60)
+		if m < 60:
+			return "%02i:%02i" %(m,s)
+		else:
+			h,m = divmod(m, 60)
+			return "%i:%02i:%02i" %(h,m,s)	
+	gtk.gdk.threads_init()

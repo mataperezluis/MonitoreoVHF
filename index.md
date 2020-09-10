@@ -55,7 +55,8 @@ Se configuro un transistor bipolar en corte y saturación para que sirva como co
 
 ![](/imagenes_informe/filtro_4.png)
   
-  	Fig.7  Simulación del Filtro Generada por FilterPro Desktop
+	Fig.7  Simulación del Filtro Generada por FilterPro Desktop
+	
 
 La conexión entre el radio y el circuito de control se realizo a través de un cable de red, a continuación se muestra el diagrama de conexión entre el radio y el circuito de control
 
@@ -72,9 +73,10 @@ La conexión entre el circuito y la tarjeta de sonido de la computadora se reali
 El software toma el archivo de audio a ser analizado lo divide en muestras de 16 bits cada una y las procesa con el algoritmo de Goertzel, luego realiza una limpieza para eliminar falsos positivos, antes de retornar el código detectado. 
  La clase DTMFdetector realiza el análisis del audio el método getDTMFfromWAV() abre el archivo a analizar, el método goertzel() realiza la detección de los tonos.
  
- ![](/imagenes_informe/diagrama_conn.png)
+![](/imagenes_informe/diagrama_conn.png)
  
- 	Fig.9  Diagrama de conexión
+	Fig.9  Diagrama de conexión
+	
 	
 ## Etapa 2: 
  Desarrollar una aplicación basada en software libre que permita la grabación del audio y los datos de identificación de cada radiocomunicación (Id, hora fecha) 
@@ -87,7 +89,8 @@ El software toma el archivo de audio a ser analizado lo divide en muestras de 16
 
  ![](/imagenes_informe/diagram_base.png)
  
- 	Fig.10  Modulo Grabador – Modelo Entidad Relación
+	Fig.10  Modulo Grabador – Modelo Entidad Relación
+	
 
 ## Etapa 3: 
  Desarrollar una interfaz gráfica basada en software libre que permita el monitoreo de la información
@@ -96,13 +99,16 @@ El software toma el archivo de audio a ser analizado lo divide en muestras de 16
  
 ## Manual de usuario
 
+primero hay que crear la base de datos con el archivo creaBasesDatos.txt
+
 Modulo Grabador este programa permite la grabación de audio controlada por volumen y la detección de tonos DTMF.
 
 Para ejecutar el programa desde la terminal se debe acceder a la carpeta donde se encuentran los archivos y escribir  >>python2.6 __init__.py
 
 ![](/imagenes_informe/pant_grabador.png)
  
- 	Fig.11  Pantalla Principal
+	Fig.11  Pantalla Principal
+	
 
 La pantalla principal contiene el menú de usuario y permite ver si se encuentra realizando una grabación y también los tonos DTMF detectados. 
 
@@ -148,11 +154,10 @@ Modulo Monitoreo este programa permite consultar los datos guardados y reproduci
 
 ![](/imagenes_informe/pant_grabador_f.png)
  
- 	Fig.15  Pantalla Monitoreo Funcionando
+	Fig.15  Pantalla Monitoreo Funcionando
+
 
 La pestaña estadísticas permite consultar las estadísticas de uso de un radio-base en un tiempo determinado, puede consultar la información por años, o meses de un año, el sistema mostrara un grafico de barras con el número de llamadas grabadas a través del radio-base determinado, el programa guardara una imagen en formato .png del grafico para que pueda ser utilizado en otras aplicaciones.
 
-el informe completo sobre éste sistema se puede descargar desde 
-
-https://drive.google.com/file/d/1d-Ca0kUcSWiV4yGMPNNpxaiM6wOeb7YQ/view?usp=sharing
+el informe completo sobre éste sistema se puede descargar desde [informe](https://drive.google.com/file/d/1d-Ca0kUcSWiV4yGMPNNpxaiM6wOeb7YQ/view?usp=sharing)
 

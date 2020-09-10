@@ -4,6 +4,14 @@
 	Construir el sistema de acondicionamiento de la señal de audio y decodificación de tonos
 	El sistema se diseñó para un radio Motorola GM300 el cual posee un conector de 16 pines para conexión de accesorios:
 	
+![](/imagenes_informe/pin_radio.jpg)
+
+Fig 1. Conector de accesorios visto desde la parte trasera del radio
+
+![](/imagenes_informe/pin_radio2.png)
+
+Fig 2. Pines utilizados del conector de accesorios
+	
 	
 
 ### Markdown

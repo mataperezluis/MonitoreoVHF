@@ -1,0 +1,42 @@
+CREATE TABLE  `radiomonitor`.`cargos` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre_cargo` varchar(80) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1
+
+CREATE TABLE  `radiomonitor`.`radios_grabacion` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `codigo` varchar(20) NOT NULL,
+  `hora` time NOT NULL,
+  `fecha` date NOT NULL,
+  `audio` varchar(80) NOT NULL,
+  `radio` varchar(30) NOT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `new_index` (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=110 DEFAULT CHARSET=latin1
+
+CREATE TABLE  `radiomonitor`.`radios_nombre` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `Nombre` varchar(50) NOT NULL,
+  `Ubicacion` varchar(50) NOT NULL,
+  `modelo` varchar(40) NOT NULL,
+  `serial` varchar(40) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1
+
+CREATE TABLE  `radiomonitor`.`ubicaciones` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(80) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1
+
+CREATE TABLE  `radiomonitor`.`usuarios` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `codigo` varchar(20) NOT NULL,
+  `nombre` varchar(40) DEFAULT NULL,
+  `cargo` varchar(40) DEFAULT NULL,
+  `apellido` varchar(40) DEFAULT NULL,
+  `modelo` varchar(30) NOT NULL,
+  `serial` varchar(30) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=latin1

@@ -1,7 +1,10 @@
 ## Monitoreo y Registro de una red VHF con python
 
-Etapa 1: Construir el sistema de acondicionamiento de la señal de audio y decodificación de tonos
+### Etapa 1: 
+	Construir el sistema de acondicionamiento de la señal de audio y decodificación de tonos
 	El sistema se diseñó para un radio Motorola GM300 el cual posee un conector de 16 pines para conexión de accesorios:
+	
+	
 
 ### Markdown
 

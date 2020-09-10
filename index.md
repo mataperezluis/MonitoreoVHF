@@ -56,7 +56,55 @@ Se configuro un transistor bipolar en corte y saturación para que sirva como co
 ![](/imagenes_informe/filtro_4.png)
   
   	Fig.7  Simulación del Filtro Generada por FilterPro Desktop
+
+La conexión entre el radio y el circuito de control se realizo a través de un cable de red, a continuación se muestra el diagrama de conexión entre el radio y el circuito de control
+
+![](/imagenes_informe/diagrama_conn.png)
 	
+	Fig.8  Diagrama de conexión 
+
+La conexión entre el circuito y la tarjeta de sonido de la computadora se realizo con un conector  Jack de 3.5mm.
+
+**Sistema de Decodificación de tonos DTMF**
+ Se tomo la decisión de realizar la detección de los tonos DTMF por medio de software, para de esta manera ahorrar espacio y dinero, el software se desarrollo en software libre, utilizando el lenguaje de programación Python, esta basado en una implementación del algoritmo de Goertzel.
+ El código DTMF puede estar al principio, al final o en ambos lugares de una radiocomunicación, dependiendo de la programación del radio, por lo tanto solo se analizan los primeros, y los últimos segundos, de la radio comunicación, no se analiza todo el audio para evitar la aparición de falsos positivos y reducir el tiempo de procesamiento.
+ Esta decodificación aunque es muy rápida no se hace en tiempo real, se hace  con archivos .WAV de 16-bits, un canal y 8000[Hz] de frecuencia de muestreo. El software de grabación de audio debe adaptarse a esto y guardar el principio y el final de cada radiocomunicación para que pueda ser analizada.
+El software toma el archivo de audio a ser analizado lo divide en muestras de 16 bits cada una y las procesa con el algoritmo de Goertzel, luego realiza una limpieza para eliminar falsos positivos, antes de retornar el código detectado. 
+ La clase DTMFdetector realiza el análisis del audio el método getDTMFfromWAV() abre el archivo a analizar, el método goertzel() realiza la detección de los tonos.
+ 
+ ![](/imagenes_informe/diagrama_conn.png)
+ 
+ 	Fig.9  Diagrama de conexión
 	
-	
-	
+## Etapa 2: 
+ Desarrollar una aplicación basada en software libre que permita la grabación del audio y los datos de identificación de cada radiocomunicación (Id, hora fecha) 
+ Para el desarrollo de esta aplicación se utilizó el lenguaje de programación Python, la versión elegida fue la 2.6 la cual es completamente compatible con la licencia GPL, la interfaz grafica se desarrollo utilizando el software Qt4 Designer también software libre.
+ El sistema operativo elegido fue la distribución de GNU/Linux Debian 6 Squeeze, la cual brinda gran seguridad, estabilidad, es rápido y ligero en memoria, capaz de realizar varios procesos al mismo tiempo y con gran rapidez esencial en el procesamiento de audio.
+ El software permite monitorear varias entradas de audio al mismo tiempo, el control de la grabación se realiza por volumen, la grabación del audio se realiza en formato .ogg.
+ 
+**Base de Datos**
+ Se diseño una base de datos en MySQL para almacenar todos los datos de cada radio comunicación, tono DTMF identificador del radio que realiza la llamada, hora, fecha, ruta en donde se encuentra el archivo de audio y el radio base desde el cual se realizo la grabación.
+
+ ![](/imagenes_informe/diagram_base.png)
+ 
+ 	Fig.10  Modulo Grabador – Modelo Entidad Relación
+
+## Etapa 3: 
+ Desarrollar una interfaz gráfica basada en software libre que permita el monitoreo de la información
+ 
+ Esta aplicación se desarrollo utilizando el lenguaje de programación Python  permite consultar los datos guardados, por fecha, cargo del usuario, código del radio, y nombre del radio base, puede reproducir el audio almacenado y revisar las estadísticas de uso de cada radio base por año o por mes, esta aplicación genera un grafico de barras indicando la cantidad de llamadas realiza en un periodo de tiempo determinado, también genera una imagen en formato .png de este grafico para que pueda ser utilizado en otras aplicaciones.
+ 
+## Manual de usuario
+
+Modulo Grabador este programa permite la grabación de audio controlada por volumen y la detección de tonos DTMF.
+
+Para ejecutar el programa desde la terminal se debe acceder a la carpeta donde se encuentran los archivos y escribir  >>python2.6 __init__.py
+
+![](/imagenes_informe/pant_grabador.png)
+ 
+ 	Fig.11  Pantalla Principal
+
+La pantalla principal contiene el menú de usuario y permite ver si se encuentra realizando una grabación y también los tonos DTMF detectados. 
+
+Lo primero que se debe hacer antes de empezar a realizar grabaciones es ingresar un radio a la base de datos esto permitirá asociar las grabaciones realizadas a un radio-base, para hacerlo se va al menú Herramientas>Ingresar Radio.
+
